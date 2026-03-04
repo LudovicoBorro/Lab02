@@ -3,6 +3,7 @@ from dictionary import Dictionary
 class Translator:
     def __init__(self):
         self.dizionario = Dictionary()
+        self.dicts = None
 
     @classmethod
     def printMenu(cls):
@@ -36,6 +37,7 @@ class Translator:
             file.close()
         except FileNotFoundError:
             raise FileNotFoundError(f"File {dict} non trovato!!")
+        self.dicts = dicts
 
     def handleAdd(self, entry):
         # entry is a tuple <parola_aliena> <traduzione1 traduzione2 ...>
@@ -48,7 +50,21 @@ class Translator:
             if not meaning.lower().strip().isalpha():
                 raise ValueError(f"Meaning {meaning.lower().strip().isalpha()} non valida!!")
             meanings.append(meaning.lower().strip())
+
+        if self.dizionario.check_parola(parola_aliena):
+            raise ValueError(f"Parola {parola_aliena} già inserita!!")
+
         self.dizionario.addWord(parola_aliena, meanings)
+
+        # Aggiunta parola al file di testo
+        with open(self.dicts, 'a') as file:
+            stringa = ""
+            for i in range(0,len(meanings)):
+                if i == len(meanings)-1:
+                    stringa += meanings[i]
+                else:
+                    stringa += meanings[i] + " "
+            file.write("\n" + parola_aliena + " " + stringa)
         return True
 
     def handleTranslate(self, query):
@@ -59,4 +75,5 @@ class Translator:
 
     def handleWildCard(self,query):
         # query is a string with a ? --> <par?la_aliena>
-        pass
+        parti = query.lower().split("?")
+        return self.dizionario.translateWordWildCard(parti[0].strip(), parti[1].strip())
